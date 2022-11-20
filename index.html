@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>drag drop</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+    }
+    main {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      place-items: center;
+    }
+    .draggable-container {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      border-right: 1px solid black;
+    }
+    .draggable {
+      width: 25vw;
+      height: 25vh;
+      background: #00d9ff;
+    }
+    .droppable {
+      width: 30vw;
+      height: 30vh;
+      border: 8px dashed #00d9ff;
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
+    .droppable::before {
+      display: block;
+      content: "请拖放到此区域";
+      position: absolute;
+      font-size: 16px;
+      color: hsl(0, 10%, 30%);
+    }
+    .dragover {
+      border: 8px dashed #ffae00;
+    }
+    .dropped {
+      border: 8px dashed #48ff00;
+    }
+    .dropped::before {
+      z-index: -1; /* 文字在图片后面 */
+    }
+    .droppable img {
+      width: 80%;
+      height: 80%;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="draggable-container">
+      <div id="draggable" class="draggable" draggable="true"></div>
+    </div>
+    <div id="droppable" class="droppable"></div>
+  </main>
+
+  <script>
+    let draggable = document.querySelector('#draggable');
+    let droppable = document.querySelector('#droppable');
+    draggable.addEventListener('dragstart', (e) => {
+      console.log('startdrag', e);
+      e.dataTransfer.setData('text/plain', e.target.id);
+    });
+    droppable.addEventListener('dragover', (e) => {
+      // console.log('dragover', e);
+      e.preventDefault();
+      droppable.classList.add('dragover');
+    });
+    droppable.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      droppable.classList.remove('dragover');
+    });
+    droppable.addEventListener('drop', e => {
+      console.log('drop', e)
+      e.preventDefault();
+      droppable.classList.add('dropped');
+      
+      // 移动元素
+      // const draggedId = e.dataTransfer.getData('text/plain');
+      // droppable.appendChild(document.querySelector('#' + draggedId));
+      
+      // 拖入文件
+      console.log(e.dataTransfer.items[0]);
+      [...e.dataTransfer.items].forEach(item => {
+        if (item.kind === 'file') {
+          let file = item.getAsFile();
+          createPreview(file);
+        }
+      });
+
+      function createPreview(imageFile) {
+        if (!imageFile.type.startsWith('image/')) {
+          return;
+        }
+        let image = document.createElement('img');
+        image.src = URL.createObjectURL(imageFile);
+        image.onload = () => {
+          // 回收
+          URL.revokeObjectURL(image.src);
+        };
+        droppable.appendChild(image);
+      }
+    });
+  </script>
+</body>
+</html>
